@@ -1,0 +1,230 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SAS Bill System</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="wrap">
+    <div class="left-panel">
+      <h2>Create Invoice</h2>
+
+      <label>Estimate No</label>
+      <input id="estimateNo" placeholder="e.g. 1754" />
+
+      <label>Date</label>
+      <input id="date" type="date" />
+
+      <label>Customer Name</label>
+      <input id="custName" placeholder="Customer name" />
+
+      <label>Customer Details</label>
+      <textarea id="custDetails" rows="3" placeholder="Address / notes"></textarea>
+
+      <!-- BILL PIC SYSTEM - ADDED SECTION -->
+      <div style="margin: 10px 0; padding: 10px; background: #f8f9fa; border-radius: 6px;">
+        <h3 style="margin: 0 0 8px 0;">Billing Items</h3>
+        
+        <!-- Product Search -->
+        <div class="product-search-container">
+          <input type="text" id="productSearch" placeholder="🔍 Search products..." list="products" style="width: 100%; padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+        
+        <!-- Add New Product Button -->
+        <button onclick="addNewProductFromBill()" style="background:#28a745; width:100%; margin-top:6px; padding:6px; font-size:11px;">+ Add New Product</button>
+        
+        <!-- Billing Items Actions -->
+        <div class="billing-items-container" id="billingItems">
+          <div style="color:#666; text-align:center; padding:10px; font-size:12px;">Select a product to see actions</div>
+        </div>
+        
+        <!-- Selected Items -->
+        <div style="margin-top:10px;">
+          <h4 style="margin:0 0 6px 0; font-size:13px;">Selected Items</h4>
+          <div class="selected-items-container" id="selectedItems">
+            <div style="color:#666; text-align:center; padding:10px; font-size:12px;">No items added to bill</div>
+          </div>
+        </div>
+        
+        <!-- Available Products -->
+        <div style="margin-top:10px;">
+          <h4 style="margin:0 0 6px 0; font-size:13px;">Available Products</h4>
+          <div class="product-list" id="availableProducts">
+            <!-- Products will be loaded here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Button for Company & Customer Details -->
+      <div style="margin: 10px 0;">
+        <button id="settingsBtn" type="button" style="background: #8e44ad; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; width: 100%;">
+          ⚙️ Settings (Company & Customer)
+        </button>
+      </div>
+
+      <h3>Items</h3>
+      <div id="items"></div>
+      <button id="addItem">+ Add Empty Item</button>
+
+      <!-- Tax & Discount Section - Hidden by default -->
+      <div id="taxDiscountSection" style="display: none; margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 4px;">
+        <div class="calc-row">
+          <label>Discount Type</label>
+          <select id="discountType">
+            <option value="none">None</option>
+            <option value="percent">Percent (%)</option>
+            <option value="fixed">Fixed (Rs)</option>
+          </select>
+        </div>
+        <div class="calc-row">
+          <label>Discount Value</label>
+          <input id="discountValue" type="number" value="0" />
+        </div>
+        <div class="calc-row">
+          <label>Tax Percent (%)</label>
+          <input id="taxPercent" type="number" value="0" />
+        </div>
+        <button id="hideTaxDiscount" type="button" style="background: #e74c3c; margin-top: 8px; width: 100%;">Hide Tax/Discount</button>
+      </div>
+
+      <!-- Show Tax/Discount Button -->
+      <div style="margin-top: 10px;">
+        <button id="showTaxDiscount" type="button" style="background: #3498db; width: 100%;">Show Tax/Discount Options</button>
+      </div>
+
+      <!-- BUTTONS SECTION - REMOVED SAVE AND HISTORY BUTTONS -->
+      <div style="margin-top:10px">
+        <button id="previewBtn">Preview</button>
+        <button id="pdfBtn">Generate PDF</button>
+        <button id="printBtn">Print</button>
+      </div>
+
+      <hr style="margin-top:12px;">
+
+      <h3>Products (catalog)</h3>
+      <div id="productList" class="product-list"></div>
+
+      <h4 style="margin-top:12px">Add / Edit Product</h4>
+      <input id="prodName" placeholder="Product name" />
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <input id="prodPrice" placeholder="Price" type="number" />
+        <input id="prodFinal" placeholder="Final (optional)" type="number" />
+        <input id="prodStock" placeholder="Stock" type="number" />
+      </div>
+      <div style="margin-top:8px">
+        <button id="addProdBtn">Add Product</button>
+        <button id="updateProdBtn" style="display:none">Update Product</button>
+        <button id="cancelEditProd" style="display:none">Cancel</button>
+      </div>
+    </div>
+
+    <div class="right-panel">
+      <div class="preview-top">
+        <div class="brand">
+          <img id="logoPreview" src="sas-logo.png" alt="logo" />
+          <div class="company-text">
+            <div class="name">S-A-S CORPORATION</div>
+            <div class="meta">Shop 8 Al Haj Market near Aljanat mail Main GT Road Islamabad</div>
+            <div class="meta">SHEHZAO YASIN BHATTI / 03032229069 //</div>
+            <div class="meta">sascorporations@gmail.com</div>
+            <div class="meta">Phone no.: 03119624139-03025089226-</div>
+            <div class="meta">Email: shehzaoyasin@820@gmail.com</div>
+          </div>
+        </div>
+      </div>
+
+      <iframe id="preview" class="preview-frame"></iframe>
+
+      <!-- REMOVED RECENT HISTORY SECTION -->
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Company & Customer Settings</h3>
+        <span class="close">&times;</span>
+      </div>
+      
+      <div class="modal-body">
+        <!-- Company Details -->
+        <div class="settings-section">
+          <h4>Company Details</h4>
+          <div class="form-group">
+            <label>Company Name</label>
+            <input type="text" id="companyName" placeholder="Company Name">
+          </div>
+          <div class="form-group">
+            <label>Address</label>
+            <textarea id="companyAddress" rows="2" placeholder="Company Address"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Owner Name</label>
+            <input type="text" id="companyOwner" placeholder="Owner Name">
+          </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="text" id="companyPhone" placeholder="Phone Number">
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="companyEmail" placeholder="Email">
+          </div>
+          <div class="form-group">
+            <label>Additional Phones</label>
+            <input type="text" id="companyAdditionalPhones" placeholder="Additional Phone Numbers">
+          </div>
+          <div class="form-group">
+            <label>Additional Email</label>
+            <input type="email" id="companyAdditionalEmail" placeholder="Additional Email">
+          </div>
+        </div>
+
+        <!-- Customer Details -->
+        <div class="settings-section">
+          <h4>Default Customer Details</h4>
+          <div class="form-group">
+            <label>Customer Name</label>
+            <input type="text" id="customerName" placeholder="Customer Name">
+          </div>
+          <div class="form-group">
+            <label>Bank Details</label>
+            <input type="text" id="customerBank" placeholder="Bank Details">
+          </div>
+          <div class="form-group">
+            <label>Account Number</label>
+            <input type="text" id="customerAccount" placeholder="Account Number">
+          </div>
+          <div class="form-group">
+            <label>Easy Peasia</label>
+            <input type="text" id="customerEasyPeasia" placeholder="Easy Peasia Details">
+          </div>
+          <div class="form-group">
+            <label>JAZ Cash</label>
+            <input type="text" id="customerJazCash" placeholder="JAZ Cash Details">
+          </div>
+          <div class="form-group">
+            <label>Address</label>
+            <textarea id="customerAddress" rows="2" placeholder="Customer Address"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Contact Number</label>
+            <input type="text" id="customerContact" placeholder="Contact Number">
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button id="saveSettings" style="background: #27ae60; color: white;">Save Settings</button>
+        <button id="resetSettings" style="background: #e74c3c; color: white;">Reset to Default</button>
+        <button id="closeSettings" style="background: #7f8c8d; color: white;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
